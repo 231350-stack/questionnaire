@@ -1,0 +1,302 @@
+/* ── リセット & 変数 ──────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:         #F5F0E8;
+  --card:       #FFFFFF;
+  --blue:       #3B5BDB;
+  --blue-dk:    #2F4AC5;
+  --blue-pale:  #EEF1FD;
+  --pink:       #E879A0;
+  --pink-dk:    #D4618D;
+  --pink-pale:  #FEF0F5;
+  --text:       #1E1E2E;
+  --text-2:     #5C5C77;
+  --text-3:     #A8A8BF;
+  --border:     #E8E0D5;
+  --shadow:     0 2px 20px rgba(59, 91, 219, 0.08);
+  --shadow-sm:  0 1px 8px rgba(0, 0, 0, 0.06);
+  --font: 'M PLUS Rounded 1c', sans-serif;
+  --r-xl:   24px;
+  --r-lg:   18px;
+  --r-md:   12px;
+  --r-pill: 999px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2.5rem 1rem 6rem;
+}
+
+/* ── ラッパー ─────────────────────────────────────────── */
+.wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+/* ── 導入テキスト ────────────────────────────────────── */
+.intro {
+  margin-bottom: 1.75rem;
+}
+
+.intro-badge {
+  display: inline-block;
+  background: var(--blue-pale);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 0.3rem 0.9rem;
+  border-radius: var(--r-pill);
+  margin-bottom: 1rem;
+}
+
+.intro-text {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 2;
+  color: var(--text-2);
+}
+
+/* ── フォームカード ──────────────────────────────────── */
+.form-section {
+  background: var(--card);
+  border-radius: var(--r-xl);
+  padding: 2rem 1.75rem 1.75rem;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}
+
+.form-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* ── プログレス ──────────────────────────────────────── */
+.progress {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--pink);
+  background: var(--pink-pale);
+  padding: 0.28rem 0.85rem;
+  border-radius: var(--r-pill);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.06em;
+}
+
+/* ── 質問テキスト ────────────────────────────────────── */
+.question {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.7;
+  color: var(--blue);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  min-height: 2.5rem;
+  margin-bottom: 1.5rem;
+  white-space: pre-wrap;
+}
+
+.question.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── テキストエリア ──────────────────────────────────── */
+.input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+textarea {
+  width: 100%;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.7;
+  padding: 0.875rem 1rem;
+  resize: none;
+  outline: none;
+  min-height: 130px;
+  overflow-y: hidden;
+  transition: border-color 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+textarea:focus {
+  border-color: var(--blue);
+}
+
+textarea::placeholder {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* ── 送信行 ──────────────────────────────────────────── */
+.submit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  text-align: right;
+  font-weight: 400;
+}
+
+/* ── ボタン共通 ──────────────────────────────────────── */
+button {
+  font-family: var(--font);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* ── 送信ボタン ──────────────────────────────────────── */
+#submit-btn {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 1rem;
+  border-radius: var(--r-pill);
+  box-shadow: 0 4px 16px rgba(59, 91, 219, 0.32);
+  letter-spacing: 0.06em;
+}
+
+#submit-btn:hover:not(:disabled) {
+  background: var(--blue-dk);
+}
+
+#submit-btn:disabled {
+  background: #C5CBD8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── 完了画面 ────────────────────────────────────────── */
+.completion {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--card);
+  border-radius: var(--r-xl);
+  padding: 3rem 2rem;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.completion.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.completion-icon {
+  font-size: 2.2rem;
+  color: var(--pink);
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+.completion-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 0.5rem;
+}
+
+.completion-sub {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 2rem;
+}
+
+.restart-btn {
+  display: inline-block;
+  min-height: 52px;
+  padding: 0 2.5rem;
+  background: var(--pink);
+  color: #fff;
+  font-size: 0.95rem;
+  border-radius: var(--r-pill);
+  box-shadow: 0 4px 16px rgba(232, 121, 160, 0.32);
+  letter-spacing: 0.06em;
+}
+
+.restart-btn:hover {
+  background: var(--pink-dk);
+}
+
+/* ── レスポンシブ（スマホ） ──────────────────────────── */
+@media (max-width: 480px) {
+  body {
+    padding: 1.75rem 1rem 4rem;
+  }
+
+  .wrapper {
+    padding: 0;
+  }
+
+  .form-section {
+    padding: 1.5rem 1.25rem 1.25rem;
+    border-radius: var(--r-lg);
+  }
+
+  .question {
+    font-size: 1rem;
+  }
+
+  .hint {
+    display: none;
+  }
+
+  .completion {
+    border-radius: var(--r-lg);
+    padding: 2.5rem 1.5rem;
+  }
+
+  .restart-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

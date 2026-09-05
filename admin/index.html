@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面 — 印象フォーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #F5F0E8;
+      --card:      #FFFFFF;
+      --blue:      #3B5BDB;
+      --blue-dk:   #2F4AC5;
+      --blue-pale: #EEF1FD;
+      --pink:      #E879A0;
+      --pink-dk:   #D4618D;
+      --pink-pale: #FEF0F5;
+      --text:      #1E1E2E;
+      --text-2:    #5C5C77;
+      --text-3:    #A8A8BF;
+      --border:    #E8E0D5;
+      --shadow:    0 2px 20px rgba(59,91,219,0.08);
+      --shadow-sm: 0 1px 8px rgba(0,0,0,0.06);
+      --font: 'M PLUS Rounded 1c', sans-serif;
+      --r-xl:   24px;
+      --r-lg:   18px;
+      --r-md:   12px;
+      --r-pill: 999px;
+    }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button {
+      font-family: var(--font);
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    /* ── 認証オーバーレイ ────────────────────────────── */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 1rem;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border-radius: var(--r-xl);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .auth-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--blue);
+    }
+
+    .auth-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--blue);
+      margin-bottom: 0.4rem;
+    }
+
+    .auth-sub {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-3);
+      margin-bottom: 1.75rem;
+    }
+
+    .auth-error {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--pink);
+      margin-bottom: 0.9rem;
+      display: none;
+    }
+
+    #password-input {
+      width: 100%;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      outline: none;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+      text-align: center;
+    }
+
+    #password-input:focus { border-color: var(--blue); }
+
+    #login-btn {
+      width: 100%;
+      min-height: 52px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: var(--r-pill);
+      box-shadow: 0 4px 16px rgba(59,91,219,0.3);
+      letter-spacing: 0.06em;
+    }
+
+    #login-btn:hover:not(:disabled) { background: var(--blue-dk); }
+    #login-btn:disabled { background: #C5CBD8; box-shadow: none; cursor: not-allowed; }
+
+    /* ── メインコンテンツ ────────────────────────────── */
+    #main {
+      display: none;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1rem 5rem;
+    }
+
+    /* ヘッダー */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+    }
+
+    .header-left { display: flex; flex-direction: column; gap: 0.35rem; }
+
+    .header-badge {
+      display: inline-block;
+      background: var(--blue-pale);
+      color: var(--blue);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 0.25rem 0.8rem;
+      border-radius: var(--r-pill);
+    }
+
+    .header-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .header-count {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .btn-export {
+      min-height: 44px;
+      padding: 0 1.25rem;
+      background: var(--pink);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border-radius: var(--r-pill);
+      box-shadow: 0 3px 12px rgba(232,121,160,0.3);
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      align-self: flex-start;
+      flex-shrink: 0;
+    }
+
+    .btn-export:hover { background: var(--pink-dk); }
+
+    /* タブ */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      margin-bottom: 1.5rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex-shrink: 0;
+      min-height: 40px;
+      padding: 0 1.1rem;
+      background: var(--card);
+      border: 2px solid var(--blue);
+      border-radius: var(--r-pill);
+      color: var(--blue);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab:hover:not(.active) { background: var(--blue-pale); }
+
+    .tab.active {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .tab-count {
+      font-size: 0.68rem;
+      font-weight: 500;
+      margin-left: 0.3rem;
+      opacity: 0.75;
+    }
+
+    /* 質問見出し */
+    .question-heading {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--blue);
+      background: var(--blue-pale);
+      border-radius: var(--r-md);
+      padding: 0.75rem 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+
+    /* 回答カード */
+    .response-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .response-card {
+      position: relative;
+      background: var(--card);
+      border-radius: var(--r-lg);
+      padding: 1.25rem 1.5rem;
+      padding-right: 3.5rem; /* 削除ボタンのスペース */
+      box-shadow: var(--shadow-sm);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .response-card.deleting {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+
+    .response-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .response-date {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-3);
+      margin-top: 0.6rem;
+    }
+
+    /* 削除ボタン */
+    .btn-delete {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--pink-pale);
+      color: var(--pink);
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, transform 0.1s;
+    }
+
+    .response-card:hover .btn-delete,
+    .response-card:focus-within .btn-delete {
+      opacity: 1;
+    }
+
+    .btn-delete:hover {
+      background: var(--pink);
+      color: #fff;
+    }
+
+    /* スマホでは常に表示 */
+    @media (hover: none) {
+      .btn-delete { opacity: 1; }
+    }
+
+    /* 空・読み込み */
+    .state-message {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-3);
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    /* レスポンシブ */
+    @media (max-width: 480px) {
+      .auth-card { padding: 2rem 1.5rem; }
+      #main { padding: 1.5rem 1rem 4rem; }
+      .header-title { font-size: 1.05rem; }
+      .response-card { padding: 1rem 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 認証オーバーレイ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-icon">✦</div>
+    <p class="auth-title">管理画面</p>
+    <p class="auth-sub">パスワードを入力してください</p>
+    <p class="auth-error" id="auth-error"></p>
+    <input type="password" id="password-input" placeholder="パスワード" autocomplete="current-password">
+    <button id="login-btn">ログイン</button>
+  </div>
+</div>
+
+<!-- メイン -->
+<div id="main">
+  <div class="header">
+    <div class="header-left">
+      <span class="header-badge">ADMIN</span>
+      <span class="header-title">回答一覧</span>
+      <span class="header-count" id="header-count"></span>
+    </div>
+    <button class="btn-export" id="export-btn">CSV エクスポート</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"><p class="state-message">読み込み中...</p></div>
+</div>
+
+<script>
+  'use strict';
+
+  const QUESTION_LABELS = [
+    '私を、動物に例えるとしたら何ですか？理由も教えてください。',
+    '私のことを、初めて会ったときどんな人だと思いましたか？',
+    '私が「自分では気づいていない」と思うことがあれば教えてください。',
+    '私と話していて、一番よく出てくる話題や言葉は何ですか？',
+    '私は10年後、どんな人間になっていると思いますか？',
+    '最後に、私を一文で紹介するとしたら？'
+  ];
+
+  let allData = [];
+  let activeTab = 1;
+
+  const authOverlay   = document.getElementById('auth-overlay');
+  const mainEl        = document.getElementById('main');
+  const passwordInput = document.getElementById('password-input');
+  const loginBtn      = document.getElementById('login-btn');
+  const authError     = document.getElementById('auth-error');
+  const tabsEl        = document.getElementById('tabs');
+  const contentEl     = document.getElementById('content');
+  const headerCount   = document.getElementById('header-count');
+  const exportBtn     = document.getElementById('export-btn');
+
+  // ── 認証 ──────────────────────────────────────────────
+  async function login() {
+    const password = passwordInput.value;
+    if (!password) return;
+    loginBtn.disabled = true;
+    authError.style.display = 'none';
+
+    try {
+      const res = await fetch('/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+
+      if (res.ok) {
+        authOverlay.style.display = 'none';
+        mainEl.style.display = 'block';
+        await loadData();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        authError.textContent = data.error || 'パスワードが正しくありません';
+        authError.style.display = 'block';
+        passwordInput.value = '';
+        passwordInput.focus();
+        loginBtn.disabled = false;
+      }
+    } catch {
+      authError.textContent = '通信エラーが発生しました';
+      authError.style.display = 'block';
+      loginBtn.disabled = false;
+    }
+  }
+
+  // ── データ取得 ────────────────────────────────────────
+  async function loadData() {
+    try {
+      const res = await fetch('/admin/data');
+      if (res.status === 401) {
+        authOverlay.style.display = 'flex';
+        mainEl.style.display = 'none';
+        return;
+      }
+      if (!res.ok) throw new Error('fetch failed');
+
+      allData = await res.json();
+      const total = allData.length;
+      headerCount.textContent = `合計 ${total} 件の回答`;
+      renderTabs();
+      renderContent(activeTab);
+    } catch {
+      contentEl.innerHTML = '<p class="state-message">データの取得に失敗しました</p>';
+    }
+  }
+
+  // ── タブ描画 ──────────────────────────────────────────
+  function renderTabs() {
+    tabsEl.innerHTML = '';
+    for (let i = 1; i <= 6; i++) {
+      const count = allData.filter(r => r.question_number === i).length;
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (i === activeTab ? ' active' : '');
+      btn.innerHTML = `Q${i} <span class="tab-count">${count}</span>`;
+      btn.addEventListener('click', () => {
+        activeTab = i;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        renderContent(i);
+      });
+      tabsEl.appendChild(btn);
+    }
+  }
+
+  // ── コンテンツ描画 ────────────────────────────────────
+  function renderContent(qNum) {
+    const items = allData.filter(r => r.question_number === qNum);
+
+    const heading = document.createElement('p');
+    heading.className = 'question-heading';
+    heading.textContent = `Q${qNum}.  ${QUESTION_LABELS[qNum - 1]}`;
+
+    const list = document.createElement('div');
+    list.className = 'response-list';
+
+    if (items.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'state-message';
+      empty.textContent = 'まだ回答がありません';
+      list.appendChild(empty);
+    } else {
+      items.forEach(item => {
+        list.appendChild(buildCard(item, list));
+      });
+    }
+
+    contentEl.innerHTML = '';
+    contentEl.appendChild(heading);
+    contentEl.appendChild(list);
+  }
+
+  // ── カード生成 ────────────────────────────────────────
+  function buildCard(item, listEl) {
+    const card = document.createElement('div');
+    card.className = 'response-card';
+    card.dataset.id = item.id;
+
+    const textEl = document.createElement('p');
+    textEl.className = 'response-text';
+    textEl.textContent = item.answer;
+
+    const dateEl = document.createElement('p');
+    dateEl.className = 'response-date';
+    dateEl.textContent = formatDate(item.created_at);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.title = '削除';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', () => deleteResponse(item.id, card, listEl));
+
+    card.appendChild(textEl);
+    card.appendChild(dateEl);
+    card.appendChild(delBtn);
+    return card;
+  }
+
+  // ── 削除処理 ──────────────────────────────────────────
+  async function deleteResponse(id, cardEl, listEl) {
+    if (!confirm('この回答を削除しますか？\nこの操作は取り消せません。')) return;
+
+    try {
+      const res = await fetch(`/admin/response/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || '削除に失敗しました');
+        return;
+      }
+
+      // アニメーションで消す
+      cardEl.classList.add('deleting');
+      cardEl.addEventListener('transitionend', () => {
+        cardEl.remove();
+
+        // allData から除外
+        allData = allData.filter(r => r.id !== id);
+
+        // 件数を更新
+        headerCount.textContent = `合計 ${allData.length} 件の回答`;
+        renderTabs();
+
+        // リスト空になったら「まだ回答がありません」を表示
+        if (listEl.children.length === 0) {
+          const empty = document.createElement('p');
+          empty.className = 'state-message';
+          empty.textContent = 'まだ回答がありません';
+          listEl.appendChild(empty);
+        }
+      }, { once: true });
+    } catch {
+      alert('通信エラーが発生しました');
+    }
+  }
+
+  // ── 日時フォーマット ──────────────────────────────────
+  function formatDate(raw) {
+    try {
+      const d = new Date(raw.includes('T') ? raw : raw.replace(' ', 'T') + 'Z');
+      return d.toLocaleString('ja-JP', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      });
+    } catch {
+      return raw;
+    }
+  }
+
+  // ── イベント ──────────────────────────────────────────
+  loginBtn.addEventListener('click', login);
+  passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  exportBtn.addEventListener('click', () => { window.location.href = '/admin/export'; });
+
+  passwordInput.focus();
+</script>
+</body>
+</html>

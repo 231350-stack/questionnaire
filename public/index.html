@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>印象フォーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- 導入テキスト -->
+    <div class="intro" id="intro">
+      <div class="intro-badge">匿名フォーム</div>
+      <p class="intro-text">
+        このフォームは、私についての<br>
+        あなたの印象を集めるためのものです。<br>
+        正解はありません。思ったままを書いてください。<br>
+        <br>
+        回答は完全匿名です。<br>
+        誰がどんな回答をしたか、私には一切わかりません。
+      </p>
+    </div>
+
+    <!-- 質問フォーム -->
+    <div class="form-section" id="form-section">
+      <p class="progress" id="progress"></p>
+      <p class="question" id="question"></p>
+      <div class="input-area">
+        <textarea
+          id="answer"
+          placeholder="ここに入力してください..."
+          rows="5"
+          spellcheck="false"
+        ></textarea>
+        <div class="submit-row">
+          <span class="hint">Ctrl + Enter でも送信できます</span>
+          <button id="submit-btn" disabled>送信する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 完了画面 -->
+    <div class="completion" id="completion">
+      <div class="completion-icon">✦</div>
+      <p class="completion-title">ありがとうございました</p>
+      <p class="completion-sub">あなたの言葉を受け取りました。</p>
+      <button class="restart-btn" id="restart-btn">もう一度回答する</button>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
