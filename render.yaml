@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: questionnaire
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ADMIN_PASSWORD
+        sync: false   # Renderダッシュボードで手動設定
+      - key: SESSION_SECRET
+        sync: false   # Renderダッシュボードで手動設定
