@@ -1,10 +1,12 @@
 require('dotenv').config();
+const http           = require('http');
 const express        = require('express');
 const session        = require('express-session');
 const rateLimit      = require('express-rate-limit');
 const { DatabaseSync } = require('node:sqlite'); // Node.js 22+ 組み込み
 const path           = require('path');
 const fs             = require('fs');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -159,8 +161,84 @@ app.get('/admin/export', requireAdmin, (req, res) => {
   }
 });
 
+// ── WebSocket サーバー ─────────────────────────────────────
+const server = http.createServer(app);
+const wss    = new WebSocketServer({ server });
+
+// role ごとに接続クライアントを保持
+const clients = { other: null, self: null };
+
+function sendTo(target, payload) {
+  if (target && target.readyState === WebSocket.OPEN) {
+    target.send(JSON.stringify(payload));
+  }
+}
+
+wss.on('connection', (ws) => {
+  let role = null;
+
+  ws.on('message', (data) => {
+    let msg;
+    try { msg = JSON.parse(data); } catch { return; }
+
+    // ── 登録 ──
+    if (msg.type === 'register') {
+      if (msg.role === 'other' || msg.role === 'self') {
+        role = msg.role;
+        clients[role] = ws;
+        console.log(`[WS] ${role} 接続`);
+      }
+      return;
+    }
+
+    const other = role === 'other' ? clients.self : clients.other;
+
+    switch (msg.type) {
+      // AI の応答テキスト → もう一方へ転送
+      case 'ai_response':
+        sendTo(other, { type: 'ai_response', text: msg.text });
+        break;
+
+      // 読み上げ完了 → もう一方に your_turn を送る
+      case 'speaking_done':
+        sendTo(other, { type: 'your_turn', text: msg.text });
+        break;
+
+      // 人間の割り込み → 両方に通知
+      case 'human_interrupt':
+        sendTo(clients.other, { type: 'human_interrupt', text: msg.text });
+        sendTo(clients.self,  { type: 'human_interrupt', text: msg.text });
+        break;
+
+      // 会話開始 → 両方に通知
+      case 'start':
+        sendTo(clients.other, { type: 'start' });
+        sendTo(clients.self,  { type: 'start' });
+        break;
+
+      // 会話停止 → 両方に通知
+      case 'stop':
+        sendTo(clients.other, { type: 'stop' });
+        sendTo(clients.self,  { type: 'stop' });
+        break;
+    }
+  });
+
+  ws.on('close', () => {
+    if (role && clients[role] === ws) {
+      clients[role] = null;
+      console.log(`[WS] ${role} 切断`);
+    }
+  });
+
+  ws.on('error', (err) => {
+    console.error('[WS] エラー:', err.message);
+  });
+});
+
 // ── 起動 ───────────────────────────────────────────────────
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`起動しました → http://localhost:${PORT}`);
   console.log(`管理画面   → http://localhost:${PORT}/admin`);
+  console.log(`WebSocket  → ws://localhost:${PORT}`);
 });
