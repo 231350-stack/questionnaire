@@ -166,11 +166,21 @@ const server = http.createServer(app);
 const wss    = new WebSocketServer({ server });
 
 // role ごとに接続クライアントを保持
-const clients = { other: null, self: null };
+const clients    = { other: null, self: null };
+const logClients = new Set();  // log ロールは複数接続を許可
 
 function sendTo(target, payload) {
   if (target && target.readyState === WebSocket.OPEN) {
     target.send(JSON.stringify(payload));
+  }
+}
+
+function sendToLogs(payload) {
+  const data = JSON.stringify(payload);
+  for (const client of logClients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data);
+    }
   }
 }
 
@@ -187,16 +197,24 @@ wss.on('connection', (ws) => {
         role = msg.role;
         clients[role] = ws;
         console.log(`[WS] ${role} 接続`);
+      } else if (msg.role === 'log') {
+        role = 'log';
+        logClients.add(ws);
+        console.log(`[WS] log 接続（計 ${logClients.size} 件）`);
       }
       return;
     }
 
+    // log クライアントはメッセージを送信しない
+    if (role === 'log') return;
+
     const other = role === 'other' ? clients.self : clients.other;
 
     switch (msg.type) {
-      // AI の応答テキスト → もう一方へ転送
+      // AI の応答テキスト → もう一方へ転送 + log へ通知
       case 'ai_response':
         sendTo(other, { type: 'ai_response', text: msg.text });
+        sendToLogs({ type: 'log_entry', role: role, text: msg.text });
         break;
 
       // 読み上げ完了 → もう一方に your_turn を送る
@@ -204,28 +222,34 @@ wss.on('connection', (ws) => {
         sendTo(other, { type: 'your_turn', text: msg.text });
         break;
 
-      // 人間の割り込み → 両方に通知
+      // 人間の割り込み → 両方に通知 + log へ通知
       case 'human_interrupt':
         sendTo(clients.other, { type: 'human_interrupt', text: msg.text });
         sendTo(clients.self,  { type: 'human_interrupt', text: msg.text });
+        sendToLogs({ type: 'log_entry', role: 'human', text: msg.text });
         break;
 
-      // 会話開始 → 両方に通知
+      // 会話開始 → 両方に通知 + log へ通知
       case 'start':
         sendTo(clients.other, { type: 'start' });
         sendTo(clients.self,  { type: 'start' });
+        sendToLogs({ type: 'start' });
         break;
 
-      // 会話停止 → 両方に通知
+      // 会話停止 → 両方に通知 + log へ通知
       case 'stop':
         sendTo(clients.other, { type: 'stop' });
         sendTo(clients.self,  { type: 'stop' });
+        sendToLogs({ type: 'stop' });
         break;
     }
   });
 
   ws.on('close', () => {
-    if (role && clients[role] === ws) {
+    if (role === 'log') {
+      logClients.delete(ws);
+      console.log(`[WS] log 切断（残 ${logClients.size} 件）`);
+    } else if (role && clients[role] === ws) {
       clients[role] = null;
       console.log(`[WS] ${role} 切断`);
     }
